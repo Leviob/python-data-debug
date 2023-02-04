@@ -1,3 +1,6 @@
+import csv
+
+
 def run():
 
     # Mapping column names to the input data.
@@ -8,58 +11,51 @@ def run():
     #  * Column 5 - water_temperature
     #  * Column 6 - wind_speed
 
-    COLUMN_NAMES = [
-        "time",
-        "humidity",
-        "salinity",
-        "air_temperature",
-        "water_temperature",
-        "wind_speed"
-    ]
+    # COLUMN_NAMES = [
+    #     "time",
+    #     "humidity",
+    #     "salinity",
+    #     "air_temperature",
+    #     "water_temperature",
+    #     "wind_speed"
+    # ]
 
-    # Load data from a local CSV file into a list of lists
+    # Load data from a local CSV file into a nested array
     data = []
-    with open('data.csv') as csvdata:
+    with open("data.csv") as csvdata:
         csv_reader = csv.reader(csvdata)
         for row in csv_reader:
             data.append(row)
 
-    # Turn all of the data into numerical values
-    # so we can take the average of each column
-    numeric_data = []
-    for row in data:
-        new_row = []
-        for value in row:
-            new_row.append(float(value))
-        numeric_data.append(new_row)
+    # Transpose the nested array
+    transposed = list(map(list, zip(*data)))
 
-    # Organize the data into columns
-    column_2 = []
-    column_3 = []
-    column_4 = []
-    column_5 = []
-    column_6 = []
-    for row in numeric_data:
-        column_2.append(row[2])
-        column_3.append(row[3])
-        column_4.append(row[4])
-        column_5.append(row[5])
-        column_6.append(row[6])
+    # Remove NaN values and cast to float
+    for col_idx, col_data in enumerate(transposed):
+        # Do not cast time column to float
+        if col_idx == 0:
+            continue
+        transposed[col_idx] = [float(x) for x in col_data if not math.isnan(float(x))]
+
+    def column_average(col_num):
+        """Takes 1-indexed column number, returns the average of that column"""
+
+        return sum(transposed[col_num - 1]) / len(transposed[col_num - 1])
 
     # Calculate the average of each column
-    col_2_avg = sum(column_2) / len(column_2)
-    col_3_avg = sum(column_3) / len(column_3)
-    col_4_avg = sum(column_4) / len(column_4)
-    col_5_avg = sum(column_5) / len(column_5)
-    col_6_avg = sum(column_6) / len(column_6)
+    col_2_avg = column_average(2)
+    col_3_avg = column_average(3)
+    col_4_avg = column_average(4)
+    col_5_avg = column_average(5)
+    col_6_avg = column_average(6)
 
     # Return the averages of each column
     return {
-        'humidity': col_2_avg,
-        'salinity': col_3_avg,
-        'air_temperature': col_4_avg,
-        'water_temperature': col_5_avg,
-        'wind_speed': col_6_avg
+        "humidity": col_2_avg,
+        "salinity": col_3_avg,
+        "air_temperature": col_4_avg,
+        "water_temperature": col_5_avg,
+        "wind_speed": col_6_avg,
     }
 
 
