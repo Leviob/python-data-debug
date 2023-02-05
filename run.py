@@ -1,29 +1,59 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+COLUMN_NAMES = [
+    "time",
+    "humidity",
+    "salinity",
+    "air_temperature",
+    "water_temperature",
+    "wind_speed",
+]
 
 
-def run():
+def get_averages():
+    """
+    Returns dictionary of averages of CSV file
 
-    # Mapping column names to the input data.
-    #  * Column 1 - time
-    #  * Column 2 - humidity
-    #  * Column 3 - salinity
-    #  * Column 4 - air_temperature
-    #  * Column 5 - water_temperature
-    #  * Column 6 - wind_speed
+    The input data must have the following format:
+    Column 1 - time
+    Column 2 - humidity
+    Column 3 - salinity
+    Column 4 - air_temperature
+    Column 5 - water_temperature
+    Column 6 - wind_speed
+    """
 
-    COLUMN_NAMES = [
-        "time",
-        "humidity",
-        "salinity",
-        "air_temperature",
-        "water_temperature",
-        "wind_speed",
-    ]
-
-    # Load data from CSV into dataframe
+    # Organize data into a dataframe
     df = pd.read_csv("data.csv", names=COLUMN_NAMES, parse_dates=["time"])
 
-    # Return the means
+    df["water_temp_diff"] = abs(df.water_temperature.diff())
+    # print(df.water_temp_diff[abs(df.water_temp_diff) >= 2].count())
+
+    # # Plot histogram of change in water temperature between readings, ignoring large differences
+    # df.loc[abs(df.water_temp_diff) > 10, 'water_temp_diff'] = np.nan
+    # plt.hist(df.water_temp_diff, bins=100)
+    # plt.yscale('log')
+    # plt.show()
+
+    df["water_temp_no_outliers"] = df.water_temperature[
+        (abs(df.water_temp_diff) < 2)
+        & (df.water_temperature > 0)
+        & (df.water_temperature < 100)
+    ]
+
+    # Plot water temperature over time
+    fig, axs = plt.subplots(2, sharex=True)
+    fig.subplots_adjust(hspace=0.5)
+    fig.suptitle("Water Temperature")
+    axs[0].scatter(df.time, df.water_temperature, marker=".")
+    axs[0].set_title("Original Data")
+    axs[1].scatter(df.time, df.water_temp_no_outliers, marker=".")
+    axs[1].set_title("Outliers Removed")
+    plt.show()
+
+    # Return the averages of each column
     return {
         "humidity": df.humidity.mean(),
         "salinity": df.salinity.mean(),
@@ -39,7 +69,7 @@ if __name__ == '__main__':
     import math
 
     start = time.perf_counter()
-    averages = run()
+    averages = get_averages()
     end = time.perf_counter()
 
     CORRECT_HUMIDITY = 80.8129
